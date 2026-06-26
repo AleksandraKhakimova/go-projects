@@ -129,6 +129,9 @@ func mainMenu(w fyne.Window) fyne.CanvasObject {
 		coloredButton("7. Статистика", pink, func() {
 			w.SetContent(statsScreen(w))
 		}),
+		coloredButton("8. Корзина", pink, func() {
+			w.SetContent(cartScreen(w))
+		}),
 		coloredButton("0. Выход", red, func() {
 			w.Close()
 		}),
@@ -139,6 +142,8 @@ func mainMenu(w fyne.Window) fyne.CanvasObject {
 // 1. Показать все
 func showAllScreen(w fyne.Window) fyne.CanvasObject {
 	products, _ := db.GetAllProducts()
+	statusLabel := widget.NewLabel("") // для сообщения "Добавлено!"
+
 	list := widget.NewList(
 		func() int { return len(products) },
 		func() fyne.CanvasObject { return widget.NewLabel("") },
@@ -147,7 +152,25 @@ func showAllScreen(w fyne.Window) fyne.CanvasObject {
 			obj.(*widget.Label).SetText(fmt.Sprintf("%s | Цена: %.2f руб.", p.Info(), p.GetPrice()))
 		},
 	)
-	return backgroundScreen(w, "bg_common.jpg", container.NewBorder(nil, backBtn(w), nil, nil, list))
+
+	// Кнопка "В корзину"
+	addToCartBtn := widget.NewButton("Добавить в корзину", func() {
+		// Получаем выбранный продукт (первый для примера, нужно доработать)
+		if len(products) > 0 {
+			p := products[0] // Временно берём первый продукт
+			db.AddToCart(0, p.Info(), p.GetPrice())
+			statusLabel.SetText("Добавлено в корзину!")
+		}
+	})
+
+	content := container.NewBorder(
+		nil,
+		container.NewVBox(addToCartBtn, backBtn(w)),
+		nil, nil,
+		container.NewVBox(list, statusLabel),
+	)
+
+	return backgroundScreen(w, "bg_common.jpg", content)
 }
 
 // 2. Добавить продукт
@@ -312,4 +335,25 @@ func backgroundScreen(w fyne.Window, bgName string, content fyne.CanvasObject) f
 	bgImage := canvas.NewImageFromFile("gui/" + bgName)
 	bgImage.FillMode = canvas.ImageFillStretch
 	return container.NewStack(bgImage, content)
+}
+
+func cartScreen(w fyne.Window) fyne.CanvasObject {
+	items, _ := db.GetCart()
+	total, _ := db.CartTotal()
+
+	text := "=== Корзина ===\n\n"
+	for _, item := range items {
+		text += fmt.Sprintf("%s — %.2f руб.\n", item["name"], item["price"])
+	}
+	text += fmt.Sprintf("\nИтого: %.2f руб.", total)
+
+	label := widget.NewLabel(text)
+
+	clearBtn := widget.NewButton("Очистить корзину", func() {
+		db.ClearCart()
+		w.SetContent(cartScreen(w))
+	})
+
+	content := container.NewVBox(label, clearBtn)
+	return backgroundScreen(w, "bg_common.jpg", container.NewBorder(nil, backBtn(w), nil, nil, content))
 }

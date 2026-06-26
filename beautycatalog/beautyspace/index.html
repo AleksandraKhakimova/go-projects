@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BeautySpace - Косметический каталог</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Анимация звезд -->
+    <div id="stars-animation">
+        <div class="star-container">
+            <div class="star"></div>
+            <div class="star"></div>
+            <div class="star"></div>
+            <div class="star"></div>
+            <div class="star"></div>
+            <div class="star"></div>
+            <div class="star"></div>
+            <div class="star"></div>
+            <div class="star"></div>
+            <div class="star"></div>
+            <div class="star"></div>
+            <div class="star"></div>
+            <div class="star"></div>
+            <div class="star"></div>
+            <div class="star"></div>
+            <div class="star"></div>
+            <div class="star"></div>
+            <div class="star"></div>
+            <div class="star"></div>
+            <div class="star"></div>
+        </div>
+        <div class="enter-btn-container">
+            <button class="enter-btn" onclick="enterSite()">Войти в BeautySpace ✨</button>
+        </div>
+    </div>
+
+    <!-- Основной сайт -->
+    <div id="main-site" style="display: none;">
+        <!-- Шапка -->
+        <header>
+            <div class="header-content">
+                <div class="logo">
+                    <h1>✨ BeautySpace</h1>
+                </div>
+                <nav>
+                    <button onclick="showPage('catalog')" class="nav-btn active">Каталог</button>
+                    <button onclick="showPage('stats')" class="nav-btn">Статистика</button>
+                    <button onclick="showPage('admin')" class="nav-btn">Администратор</button>
+                    <button onclick="toggleCart()" class="cart-btn" id="cart-btn">
+                        🛒 <span id="cart-count" class="cart-badge">0</span>
+                    </button>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Основной контент -->
+        <main>
+            <!-- Страница каталога -->
+            <div id="catalog-page" class="page active">
+                <!-- Поиск и фильтры -->
+                <div class="filters-section">
+                    <div class="search-container">
+                        <input type="text" id="search-input" placeholder="🔍 Поиск по названию..." oninput="filterProducts()">
+                    </div>
+                    
+                    <div class="filters-container">
+                        <div class="filter-group">
+                            <select id="sort-filter" onchange="filterProducts()">
+                                <option value="default">Сортировка</option>
+                                <option value="price-asc">По возрастанию цены ↑</option>
+                                <option value="price-desc">По убыванию цены ↓</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <div class="dropdown">
+                                <button class="dropdown-btn" onclick="toggleDropdown()">
+                                    Категории ▼
+                                </button>
+                                <div class="dropdown-content" id="category-dropdown">
+                                    <label><input type="checkbox" value="Кремы" checked onchange="filterProducts()"> Кремы</label>
+                                    <label><input type="checkbox" value="Парфюм" checked onchange="filterProducts()"> Парфюм</label>
+                                    <label><input type="checkbox" value="Помада" checked onchange="filterProducts()"> Помада</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="filter-group">
+                            <label class="discount-radio">
+                                <input type="checkbox" id="discount-checkbox" onchange="toggleDiscount(this.checked)">
+                                <span>Скидка постоянного клиента 10%</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Сетка товаров -->
+                <div class="products-grid" id="products-grid">
+                    <!-- Товары будут добавлены через JavaScript -->
+                </div>
+            </div>
+
+            <!-- Страница статистики -->
+            <div id="stats-page" class="page">
+                <div class="stats-container">
+                    <h2>📊 Статистика каталога</h2>
+                    <div id="stats-content"></div>
+                </div>
+            </div>
+
+            <!-- Страница администратора -->
+            <div id="admin-page" class="page">
+                <div class="admin-container">
+                    <h2>👑 Администратор</h2>
+                    <div class="add-product-form">
+                        <h3>Добавить товар</h3>
+                        <input type="text" id="product-name" placeholder="Название товара">
+                        <select id="product-category">
+                            <option value="Кремы">Кремы</option>
+                            <option value="Парфюм">Парфюм</option>
+                            <option value="Помада">Помада</option>
+                        </select>
+                        <input type="number" id="product-price" placeholder="Цена" step="0.01">
+                        <input type="text" id="product-image" placeholder="Имя файла изображения (например: крем.jpg)">
+                        <button onclick="addProduct()" class="add-btn">➕ Добавить</button>
+                    </div>
+                    <div id="admin-products"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Модальное окно карточки товара -->
+    <div id="product-modal" class="modal" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <img id="modal-image" src="" alt="Товар" class="modal-image">
+            <h2 id="modal-title"></h2>
+            <p id="modal-price"></p>
+            <p id="modal-category"></p>
+            <div id="modal-cart-controls"></div>
+        </div>
+    </div>
+
+    <!-- Модальное окно корзины -->
+    <div id="cart-modal" class="modal" onclick="closeCart()">
+        <div class="modal-content cart-modal-content" onclick="event.stopPropagation()">
+            <span class="close-btn" onclick="closeCart()">&times;</span>
+            <h2>🛒 Корзина</h2>
+            <div id="cart-items-list"></div>
+            <div class="cart-total">
+                <strong>Итого: <span id="cart-total-price">0.00</span> ₽</strong>
+            </div>
+            <div class="cart-actions">
+                <label class="cart-discount-radio">
+                    <input type="checkbox" id="cart-discount-checkbox" onchange="applyCartDiscount(this.checked)">
+                    <span>Применить скидку постоянного клиента 10%</span>
+                </label>
+                <button onclick="checkout()" class="checkout-btn">Оформить заказ</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

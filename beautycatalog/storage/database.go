@@ -20,15 +20,26 @@ func NewDatabase(path string) (*Database, error) {
 		return nil, err
 	}
 
-	// Создаём таблицу, если её нет
-	query := `CREATE TABLE IF NOT EXISTS products (
+	// Создаём таблицу products
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS products (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         category TEXT NOT NULL,
         price REAL NOT NULL,
         product_type TEXT NOT NULL
-    );`
-	_, err = db.Exec(query)
+    );`)
+	if err != nil {
+		return nil, err
+	}
+
+	// Создаём таблицу cart
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS cart (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        product_id INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        price REAL NOT NULL,
+        FOREIGN KEY (product_id) REFERENCES products(id)
+    );`)
 	if err != nil {
 		return nil, err
 	}
@@ -153,4 +164,48 @@ func (d *Database) FindByName(name string) (models.Product, error) {
 // Закрыть базу данных
 func (d *Database) Close() {
 	d.db.Close()
+}
+
+// Добавить в корзину
+func (d *Database) AddToCart(productID int, name string, price float64) error {
+	_, err := d.db.Exec(
+		"INSERT INTO cart (product_id, name, price) VALUES (?, ?, ?)",
+		productID, name, price,
+	)
+	return err
+}
+
+// Получить корзину
+func (d *Database) GetCart() ([]map[string]interface{}, error) {
+	rows, err := d.db.Query("SELECT id, name, price FROM cart")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var items []map[string]interface{}
+	for rows.Next() {
+		var id int
+		var name string
+		var price float64
+		rows.Scan(&id, &name, &price)
+		items = append(items, map[string]interface{}{
+			"id": id, "name": name, "price": price,
+		})
+	}
+	return items, nil
+}
+
+// Очистить корзину
+func (d *Database) ClearCart() error {
+	_, err := d.db.Exec("DELETE FROM cart")
+	return err
+}
+
+// Сумма корзины
+func (d *Database) CartTotal() (float64, error) {
+	row := d.db.QueryRow("SELECT SUM(price) FROM cart")
+	var total float64
+	err := row.Scan(&total)
+	return total, err
 }
