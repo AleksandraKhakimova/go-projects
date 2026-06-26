@@ -10,4 +10,4 @@
 
 | Проект | Описание |
 |--------|----------|
-| [Старые работы](https://github.com/AleksandraKhakimova/go-projects/tree/main/Старые%20работы) |  |
+| [Старые работы](https://github.com/AleksandraKhakimova/go-projects/tree/main/Старые%20работы) | Старые тренировочные работы |
